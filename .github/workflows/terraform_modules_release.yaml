@@ -18,6 +18,10 @@ on:
         type: string
         description: List of working directories in JSON format, e.g. '["terraform", "terraform-product"]'.
         default: '["terraform"]'
+      compliance-only:
+        type: boolean
+        description: "Pass the variable (github.event_name == 'pull_request')"
+        required: true
 
 permissions:
   contents: read
@@ -33,12 +37,13 @@ env:
 
 jobs:
   compliance:
+    if: ${{ inputs.compliance-only }}
     uses: ./.github/workflows/terraform_modules_compliance.yaml
     with:
       terraform-directories: ${{ inputs.terraform-directories }}
 
   tag:
-    needs: compliance
+    if: ${{ !inputs.compliance-only }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
