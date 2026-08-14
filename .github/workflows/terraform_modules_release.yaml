@@ -24,7 +24,7 @@ on:
         required: true
 
 permissions:
-  contents: read
+  contents: write
 
 # Serialize tag creation so concurrent pushes don't compute the same minor.
 concurrency:
