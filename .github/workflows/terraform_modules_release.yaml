@@ -14,10 +14,6 @@ on:
         type: string
         description: Path to the file containing the major version number.
         default: terraform/MAJOR_VERSION
-      terraform-directories:
-        type: string
-        description: List of working directories in JSON format, e.g. '["terraform", "terraform-product"]'.
-        default: '["terraform"]'
       check-only:
         type: boolean
         description: "Pass the variable ${{ github.event_name == 'pull_request' }}"
