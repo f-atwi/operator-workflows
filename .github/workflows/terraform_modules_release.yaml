@@ -18,9 +18,9 @@ on:
         type: string
         description: List of working directories in JSON format, e.g. '["terraform", "terraform-product"]'.
         default: '["terraform"]'
-      compliance-only:
+      check-only:
         type: boolean
-        description: "Pass the variable (github.event_name == 'pull_request')"
+        description: "Pass the variable ${{ github.event_name == 'pull_request' }}"
         required: true
 
 permissions:
@@ -36,14 +36,27 @@ env:
   MAJOR_VERSION_FILE: ${{ inputs.major-version-file || 'terraform/MAJOR_VERSION' }}
 
 jobs:
-  compliance:
-    if: ${{ inputs.compliance-only }}
-    uses: ./.github/workflows/terraform_modules_compliance.yaml
-    with:
-      terraform-directories: ${{ inputs.terraform-directories }}
+  check:
+    if: ${{ inputs.check-only }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Check MAJOR_VERSION file exists
+        run: |
+          set -euo pipefail
+          if [ ! -f "${MAJOR_VERSION_FILE}" ]; then
+            echo "ERROR: MAJOR_VERSION file not found at '${MAJOR_VERSION_FILE}'"
+            exit 1
+          fi
+          if ! grep -qE '^[0-9]+' "${MAJOR_VERSION_FILE}"; then
+            echo "ERROR: '${MAJOR_VERSION_FILE}' does not contain a valid major version integer"
+            exit 1
+          fi
 
   tag:
-    if: ${{ !inputs.compliance-only }}
+    if: ${{ !inputs.check-only }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -51,18 +64,6 @@ jobs:
       - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
-
-      - name: Check MAJOR_VERSION file (CC008)
-        run: |
-          set -euo pipefail
-          if [ ! -f "${MAJOR_VERSION_FILE}" ]; then
-            echo "ERROR: MAJOR_VERSION file not found at '${MAJOR_VERSION_FILE}' (CC008 §Module Lifecycle)"
-            exit 1
-          fi
-          if ! grep -qE '^[0-9]+' "${MAJOR_VERSION_FILE}"; then
-            echo "ERROR: '${MAJOR_VERSION_FILE}' does not contain a valid major version integer (CC008 §Module Lifecycle)"
-            exit 1
-          fi
 
       - name: Compute and push the next Terraform module tag
         run: |
