@@ -16,7 +16,7 @@ on:
         default: terraform/MAJOR_VERSION
       check-only:
         type: boolean
-        description: "Pass the variable ${{ github.event_name == 'pull_request' }}"
+        description: "Pass the variable `github.event_name == 'pull_request'`"
         required: true
 
 permissions:
